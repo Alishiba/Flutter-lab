@@ -1,0 +1,170 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Soundboard Budget Calculator',
+      home: BudgetSoundboard(),
+    );
+  }
+}
+
+class BudgetSoundboard extends StatefulWidget {
+  const BudgetSoundboard({super.key});
+
+  @override
+  State<BudgetSoundboard> createState() => _BudgetSoundboardState();
+}
+
+class _BudgetSoundboardState extends State<BudgetSoundboard> {
+  // 🎵 Controllers for input fields
+  final _formKey = GlobalKey<FormState>();
+  final _incomeController = TextEditingController();
+  final _rentController = TextEditingController();
+  final _foodController = TextEditingController();
+  final _transportController = TextEditingController();
+  final _othersController = TextEditingController();
+
+  String _balanceResult = "";
+  Color _balanceColor = Colors.black;
+
+  // 🎵 Calculate Balance Function
+  void _calculateBalance() {
+    if (_formKey.currentState!.validate()) {
+      double income = double.parse(_incomeController.text);
+      double rent = double.parse(_rentController.text);
+      double food = double.parse(_foodController.text);
+      double transport = double.parse(_transportController.text);
+      double others = double.parse(_othersController.text);
+
+      double balance = income - (rent + food + transport + others);
+
+      setState(() {
+        if (balance < 0) {
+          _balanceResult = "⚠️ You are overspending! Balance = ₹$balance";
+          _balanceColor = Colors.red;
+        } else {
+          _balanceResult = "✅ Savings! Your Remaining Balance = ₹$balance";
+          _balanceColor = Colors.green;
+        }
+      });
+    }
+  }
+
+  // 🎵 Helper Widget for TextFormField with icon
+  Widget buildInputField(
+      String label, IconData icon, TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.deepPurple),
+        border: const OutlineInputBorder(),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return "Please enter $label";
+        }
+        if (double.tryParse(value) == null || double.parse(value) < 0) {
+          return "Enter a valid number";
+        }
+        return null;
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("🎵 Soundboard Budget Calculator"),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              const Text(
+                "Tap-inspired Budget Soundboard 💰",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple),
+              ),
+              const SizedBox(height: 20),
+
+              // 🎶 Inputs (Soundboard Style)
+              buildInputField("Monthly Income", Icons.attach_money, _incomeController),
+              const SizedBox(height: 12),
+              buildInputField("Rent / EMI", Icons.home, _rentController),
+              const SizedBox(height: 12),
+              buildInputField("Food Expenses", Icons.restaurant, _foodController),
+              const SizedBox(height: 12),
+              buildInputField("Transport Expenses", Icons.directions_bus, _transportController),
+              const SizedBox(height: 12),
+              buildInputField("Other Expenses", Icons.shopping_cart, _othersController),
+
+              const SizedBox(height: 20),
+
+              // 🎛️ Calculate Button
+              ElevatedButton.icon(
+                onPressed: _calculateBalance,
+                icon: const Icon(Icons.calculate),
+                label: const Text("Calculate Balance"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // 🎯 Result Display
+              Text(
+                _balanceResult,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _balanceColor,
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // 🎵 Soundboard Visual Placeholder
+              Container(
+                height: 120,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.shade100,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Text(
+                    "🎶 Soundboard Visualizer Area",
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

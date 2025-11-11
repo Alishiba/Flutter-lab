@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+// 🔊 Model class for a sound item
+class SoundItem {
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const SoundItem(this.label, this.icon, this.color);
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Soundboard App',
+      debugShowCheckedModeBanner: false, // removes debug banner
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Soundboard Application',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.deepPurple,
+        ),
+        body: const SoundboardScreen(),
+      ),
+    );
+  }
+}
+
+class SoundboardScreen extends StatelessWidget {
+  const SoundboardScreen({super.key});
+
+  // 🎶 List of sounds (easily expandable)
+  final List<SoundItem> sounds = const [
+    SoundItem("Drum", Icons.music_note, Colors.blue),
+    SoundItem("Clap", Icons.pan_tool, Colors.green),
+    SoundItem("Bell", Icons.notifications, Colors.orange),
+    SoundItem("Guitar", Icons.queue_music, Colors.redAccent),
+    SoundItem("Piano", Icons.piano, Colors.teal),
+    SoundItem("Whistle", Icons.speaker, Colors.pink),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text(
+            "🎵 Welcome to Soundboard!",
+            style: TextStyle(color: Colors.black, fontSize: 18),
+          ),
+          const SizedBox(height: 16),
+
+          // 🔍 Search Bar
+          const TextField(
+            decoration: InputDecoration(
+              hintText: "Search Sound",
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 🔊 List of sounds (scrollable)
+          Expanded(
+            child: ListView.builder(
+              itemCount: sounds.length,
+              itemBuilder: (context, index) {
+                final sound = sounds[index];
+                return soundCard(sound);
+              },
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // 🎶 Visualizer Placeholder
+          Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(
+              child: Text(
+                "🎶 Sound Visualizer Area",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Custom ListTile-style sound card
+  Widget soundCard(SoundItem sound) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 3,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: sound.color,
+          child: Icon(sound.icon, color: Colors.white),
+        ),
+        title: Text(
+          sound.label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        trailing: ElevatedButton(
+          onPressed: () {
+            debugPrint("Playing ${sound.label} sound...");
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: sound.color,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+          child: const Text("Play"),
+        ),
+      ),
+    );
+  }
+}

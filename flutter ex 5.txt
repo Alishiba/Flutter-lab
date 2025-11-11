@@ -1,0 +1,268 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Soundboard',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const SoundboardHome(),
+    );
+  }
+}
+
+/// Sound model
+class SoundSample {
+  final String title;
+  final String category;
+  final IconData icon;
+  final Color color;
+
+  const SoundSample({
+    required this.title,
+    required this.category,
+    required this.icon,
+    required this.color,
+  });
+}
+
+class SoundboardHome extends StatelessWidget {
+  const SoundboardHome({super.key});
+
+  final List<SoundSample> sounds = const [
+    SoundSample(
+        title: "Air Horn",
+        category: "FX",
+        icon: Icons.speaker_phone,
+        color: Colors.red),
+    SoundSample(
+        title: "Bass Drop",
+        category: " EDM ",
+        icon: Icons.graphic_eq,
+        color: Colors.deepPurple),
+    SoundSample(
+        title: "Clap",
+        category: "Drums",
+        icon: Icons.pan_tool_alt,
+        color: Colors.orange),
+    SoundSample(
+        title: "Snare",
+        category: "Drums",
+        icon: Icons.auto_awesome,
+        color: Colors.blue),
+    SoundSample(
+        title: "Kick",
+        category: "Drums",
+        icon: Icons.circle,
+        color: Colors.teal),
+    SoundSample(
+        title: "Laser",
+        category: "Sci-Fi",
+        icon: Icons.bolt,
+        color: Colors.green),
+    SoundSample(
+        title: "Bell",
+        category: "Tones",
+        icon: Icons.notifications_active,
+        color: Colors.indigo),
+    SoundSample(
+        title: "Whistle",
+        category: "Tones",
+        icon: Icons.music_note,
+        color: Colors.pink),
+    SoundSample(
+        title: "Boing",
+        category: "Cartoon",
+        icon: Icons.emoji_emotions,
+        color: Colors.amber),
+    SoundSample(
+        title: "Record Scratch",
+        category: "FX",
+        icon: Icons.album,
+        color: Colors.brown),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Soundboard"),
+        backgroundColor: scheme.primary,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Tap to play quick sounds",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.builder(
+                itemCount: sounds.length,
+                itemBuilder: (context, index) {
+                  final sound = sounds[index];
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 2,
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: sound.color.withOpacity(0.2),
+                        radius: 26,
+                        child: Icon(sound.icon, color: sound.color, size: 30),
+                      ),
+                      title: Text(sound.title),
+                      subtitle: Text(sound.category.trim()),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.play_arrow_rounded,
+                            color: Colors.deepPurple),
+                        onPressed: () async {
+                          // Demo "click" sound; replace with real audio later
+                          await SystemSound.play(SystemSoundType.click);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text("Playing '${sound.title}' (demo)")),
+                            );
+                          }
+                        },
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SoundDetailPage(sound: sound),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sound Detail Page (like a reader/detail page)
+class SoundDetailPage extends StatelessWidget {
+  final SoundSample sound;
+  const SoundDetailPage({super.key, required this.sound});
+
+  Future<void> _playDemo(BuildContext context) async {
+    await SystemSound.play(SystemSoundType.click);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Playing '${sound.title}' (demo)")),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(sound.title),
+        backgroundColor: scheme.primary,
+        foregroundColor: Colors.white,
+      ),
+      body: Container(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: Column(
+            children: [
+              CircleAvatar(
+                backgroundColor: sound.color.withOpacity(0.2),
+                radius: 60,
+                child: Icon(sound.icon, color: sound.color, size: 60),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                sound.title,
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Text("Category: ${sound.category.trim()}",
+                  style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 20),
+              const Divider(),
+              const SizedBox(height: 10),
+              const Text(
+                "Tap the pads below to trigger the sound. "
+                "This demo uses a system click; add real audio files later for full playback.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, height: 1.5),
+              ),
+              const SizedBox(height: 24),
+
+              // Simple 2x3 grid of pads
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  children: List.generate(6, (i) {
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () => _playDemo(context),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: sound.color.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: sound.color.withOpacity(0.5),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.play_arrow_rounded, size: 36),
+                              const SizedBox(height: 6),
+                              Text(
+                                "Pad ${i + 1}",
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                onPressed: () => _playDemo(context),
+                icon: const Icon(Icons.play_circle),
+                label: const Text("Play"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
