@@ -1,0 +1,124 @@
+Main.dart
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MaterialApp(
+    title:"Product Inventory Tracker",
+    home:ProductScreen(),
+  ));}
+class ProductScreen extends StatefulWidget{
+  const ProductScreen({super.key});
+  @override
+  State<ProductScreen> createState()=>_ProductScreenState();
+}
+class _ProductScreenState extends State<ProductScreen>{
+final _formkey=GlobalKey<FormState>();
+final _namecontroller=TextEditingController();
+final _quantitycontroller=TextEditingController();
+final _pricecontroller=TextEditingController();
+String _status="";
+final CollectionReference product=FirebaseFirestore.instance.collection("products");
+Future<void> _addProduct() async{
+  if(_formkey.currentState!.validate()){
+    await product.add({
+      'name':_namecontroller.text,
+      'quantity':int.parse(_quantitycontroller.text),
+      'price':int.parse(_pricecontroller.text)
+    });
+    _namecontroller.clear();
+    _quantitycontroller.clear();
+    _pricecontroller.clear();
+    setState(() {
+      _status="Data saved";
+    });  }}
+double gettotal(List<QueryDocumentSnapshot> records) {
+  double sum = 0;
+  for (var doc in records) {
+    sum += (doc['quantity'] * doc['price']);  }
+  return sum;}
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar:AppBar(title: Text("Product Inventory Tracker"),backgroundColor: Colors.indigo),
+      body:Container(
+        padding:EdgeInsets.all(20),
+        child:Column(
+          children:[
+            SingleChildScrollView(
+              child:Form(
+                key:_formkey, 
+                child:Column(
+                  children: [
+                    TextFormField(
+                      controller:_namecontroller,
+                      decoration: InputDecoration(
+                        labelText: "Enter product name",
+                        border:OutlineInputBorder(),    ),
+validator: (value)=>
+                      value==null||value.isEmpty?"Please enter your product name!!":null,
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller:_quantitycontroller,
+                      decoration: InputDecoration(
+                        labelText: "Enter product quantity",
+                        border:OutlineInputBorder(),
+                      ),
+                      validator: (value)=>
+                      value==null||value.isEmpty?"Please enter your product quantity!!":null,
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller:_pricecontroller,
+                      decoration: InputDecoration(
+                        labelText: "Enter product price",
+                        border:OutlineInputBorder(),
+                      ),
+                      validator: (value)=>
+                      value==null||value.isEmpty?"Please enter your product price!!":null,),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+onPressed:_addProduct,
+                       child: Text("Save Details"), ),
+                       SizedBox(height: 10),
+                       Text(_status,style:TextStyle(color:Colors.green))
+                  ],  )  ),),
+            SizedBox(height: 10),
+            Expanded(
+              child:StreamBuilder<QuerySnapshot>(
+                stream:product.snapshots(),
+                builder:(context,snapshot){
+                  if(snapshot.hasError){
+                    return Center(child:Text("Error:${snapshot.error}"));}
+                  if(!snapshot.hasData){
+                    return Center(child:CircularProgressIndicator());}
+                  final records=snapshot.data!.docs;
+                  if(records.isEmpty){
+                    return Center(child:Text("No products found"));}
+                  final total = gettotal(records);
+                  return Column(
+                    children: [
+                      Expanded(child:ListView.builder(
+                    itemCount: records.length,
+                    itemBuilder: (context,index){
+                      final prod =records[index];
+		return ListTile(
+                        title: Text(prod['name']),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children:[
+                          Text("Quantity: ${prod['quantity'].toString()} price: ${prod['price'].toString()}"),
+                          if(prod['quantity']<5)
+                          const Text("Low Stock!", style:TextStyle(color:Colors.red))
+                          ]));  },),  ),
+                Padding(
+                  padding :const EdgeInsets.all(8.0),
+                  child:Text("Total Stock value: ${total}",
+                  style:const TextStyle(fontWeight:FontWeight.bold,fontSize:16),  )
+  )  ],  );  }  )  )  ], )
+)   );  }
+}
+
